@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Aditya General Store"
+version = "1.0.0"
+id = "artifacts/aditya-general-store"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 26091
+
+[services.development]
+run = "pnpm --filter @workspace/aditya-general-store run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aditya-general-store", "run", "build" ]
+publicDir = "artifacts/aditya-general-store/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "26091"
+BASE_PATH = "/"
