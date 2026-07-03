@@ -24,6 +24,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { getAdminToken, setAdminToken, clearAdminToken } from "@/lib/admin-auth";
 import { LogOut } from "lucide-react";
+import { ImageUploadField } from "@/components/image-upload-field";
 
 type Tab = "overview" | "products" | "categories" | "banners" | "lowstock";
 
@@ -92,6 +93,69 @@ export default function Admin() {
     stock: "",
     lowStockThreshold: "10",
   });
+
+  const [editingProductId, setEditingProductId] = useState<number | null>(null);
+  const [editProduct, setEditProduct] = useState({
+    categoryId: "",
+    name: "",
+    description: "",
+    price: "",
+    mrp: "",
+    unit: "",
+    imageUrl: "",
+    stock: "",
+    lowStockThreshold: "10",
+  });
+
+  const startEditProduct = (p: NonNullable<typeof products>[number]) => {
+    setEditingProductId(p.id);
+    setEditProduct({
+      categoryId: String(p.categoryId),
+      name: p.name,
+      description: p.description,
+      price: String(p.price),
+      mrp: String(p.mrp),
+      unit: p.unit,
+      imageUrl: p.imageUrl,
+      stock: String(p.stock),
+      lowStockThreshold: String(p.lowStockThreshold),
+    });
+  };
+
+  const cancelEditProduct = () => {
+    setEditingProductId(null);
+  };
+
+  const saveEditProduct = () => {
+    if (editingProductId == null) return;
+    if (!editProduct.categoryId || !editProduct.name || !editProduct.price || !editProduct.mrp || !editProduct.unit) {
+      alert("Please fill category, name, price, mrp, unit");
+      return;
+    }
+    updateProduct.mutate(
+      {
+        id: editingProductId,
+        data: {
+          categoryId: Number(editProduct.categoryId),
+          name: editProduct.name,
+          description: editProduct.description,
+          price: Number(editProduct.price),
+          mrp: Number(editProduct.mrp),
+          unit: editProduct.unit,
+          imageUrl: editProduct.imageUrl,
+          stock: Number(editProduct.stock || 0),
+          lowStockThreshold: Number(editProduct.lowStockThreshold || 10),
+        },
+      },
+      {
+        onSuccess: () => {
+          setEditingProductId(null);
+          queryClient.invalidateQueries({ queryKey: getListProductsQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getGetLowStockProductsQueryKey() });
+        },
+      },
+    );
+  };
 
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault();
@@ -426,11 +490,9 @@ export default function Admin() {
                   className="border border-border p-2 rounded-lg text-sm"
                 />
               </div>
-              <input
+              <ImageUploadField
                 value={newProduct.imageUrl}
-                onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })}
-                placeholder="Image URL"
-                className="w-full border border-border p-2 rounded-lg text-sm"
+                onChange={(dataUri) => setNewProduct({ ...newProduct, imageUrl: dataUri })}
               />
               <button
                 onClick={() => {
@@ -479,43 +541,115 @@ export default function Admin() {
               </button>
             </div>
 
-            {(products ?? []).map((p) => (
-              <div key={p.id} className="bg-card p-3 rounded-xl border border-border flex justify-between items-center gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">{p.name}</p>
-                  <p className="text-xs text-muted-foreground">₹{p.price} • Stock: {p.stock}</p>
+            {(products ?? []).map((p) =>
+              editingProductId === p.id ? (
+                <div key={p.id} className="bg-card p-4 rounded-xl border-2 border-primary space-y-2">
+                  <p className="font-bold text-sm">Edit Product</p>
+                  <select
+                    value={editProduct.categoryId}
+                    onChange={(e) => setEditProduct({ ...editProduct, categoryId: e.target.value })}
+                    className="w-full border border-border p-2 rounded-lg text-sm"
+                  >
+                    <option value="">Select category</option>
+                    {(categories ?? []).map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    value={editProduct.name}
+                    onChange={(e) => setEditProduct({ ...editProduct, name: e.target.value })}
+                    placeholder="Product name"
+                    className="w-full border border-border p-2 rounded-lg text-sm"
+                  />
+                  <input
+                    value={editProduct.description}
+                    onChange={(e) => setEditProduct({ ...editProduct, description: e.target.value })}
+                    placeholder="Description"
+                    className="w-full border border-border p-2 rounded-lg text-sm"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      value={editProduct.price}
+                      onChange={(e) => setEditProduct({ ...editProduct, price: e.target.value })}
+                      placeholder="Price"
+                      type="number"
+                      className="border border-border p-2 rounded-lg text-sm"
+                    />
+                    <input
+                      value={editProduct.mrp}
+                      onChange={(e) => setEditProduct({ ...editProduct, mrp: e.target.value })}
+                      placeholder="MRP"
+                      type="number"
+                      className="border border-border p-2 rounded-lg text-sm"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      value={editProduct.stock}
+                      onChange={(e) => setEditProduct({ ...editProduct, stock: e.target.value })}
+                      placeholder="Stock"
+                      type="number"
+                      className="border border-border p-2 rounded-lg text-sm"
+                    />
+                    <input
+                      value={editProduct.unit}
+                      onChange={(e) => setEditProduct({ ...editProduct, unit: e.target.value })}
+                      placeholder="Unit (e.g. 1 kg)"
+                      className="border border-border p-2 rounded-lg text-sm"
+                    />
+                  </div>
+                  <ImageUploadField
+                    value={editProduct.imageUrl}
+                    onChange={(dataUri) => setEditProduct({ ...editProduct, imageUrl: dataUri })}
+                  />
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      onClick={saveEditProduct}
+                      disabled={updateProduct.isPending}
+                      className="flex-1 bg-primary text-white py-2 rounded-lg font-bold text-sm disabled:opacity-60"
+                    >
+                      {updateProduct.isPending ? "Saving..." : "Save Changes"}
+                    </button>
+                    <button
+                      onClick={cancelEditProduct}
+                      className="flex-1 bg-muted text-foreground py-2 rounded-lg font-bold text-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={() => {
-                    const newStock = prompt("Update stock quantity", String(p.stock));
-                    if (newStock == null) return;
-                    updateProduct.mutate(
-                      { id: p.id, data: { stock: Number(newStock) } },
-                      {
-                        onSuccess: () => {
-                          queryClient.invalidateQueries({ queryKey: getListProductsQueryKey() });
-                          queryClient.invalidateQueries({ queryKey: getGetLowStockProductsQueryKey() });
-                        },
-                      },
-                    );
-                  }}
-                  className="text-xs font-bold text-primary"
-                >
-                  Edit Stock
-                </button>
-                <button
-                  onClick={() =>
-                    deleteProduct.mutate(
-                      { id: p.id },
-                      { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListProductsQueryKey() }) },
-                    )
-                  }
-                  className="text-destructive text-xs font-bold"
-                >
-                  Delete
-                </button>
-              </div>
-            ))}
+              ) : (
+                <div key={p.id} className="bg-card p-3 rounded-xl border border-border flex justify-between items-center gap-2">
+                  <div className="w-10 h-10 rounded-lg bg-muted/40 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    {p.imageUrl ? (
+                      <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain" />
+                    ) : (
+                      <span className="text-lg">🛍️</span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm truncate">{p.name}</p>
+                    <p className="text-xs text-muted-foreground">₹{p.price} • Stock: {p.stock}</p>
+                  </div>
+                  <button onClick={() => startEditProduct(p)} className="text-xs font-bold text-primary">
+                    Edit
+                  </button>
+                  <button
+                    onClick={() =>
+                      deleteProduct.mutate(
+                        { id: p.id },
+                        { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListProductsQueryKey() }) },
+                      )
+                    }
+                    className="text-destructive text-xs font-bold"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ),
+            )}
           </div>
         )}
       </div>
