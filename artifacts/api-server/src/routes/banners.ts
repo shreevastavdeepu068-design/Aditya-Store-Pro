@@ -10,6 +10,7 @@ import {
   CreateBannerResponse,
   UpdateBannerResponse,
 } from "@workspace/api-zod";
+import { requireAdmin } from "../middlewares/require-admin";
 
 const router: IRouter = Router();
 
@@ -18,7 +19,7 @@ router.get("/banners", async (_req, res): Promise<void> => {
   res.json(ListBannersResponse.parse(banners));
 });
 
-router.post("/banners", async (req, res): Promise<void> => {
+router.post("/banners", requireAdmin, async (req, res): Promise<void> => {
   const parsed = CreateBannerBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -28,7 +29,7 @@ router.post("/banners", async (req, res): Promise<void> => {
   res.status(201).json(CreateBannerResponse.parse(banner));
 });
 
-router.patch("/banners/:id", async (req, res): Promise<void> => {
+router.patch("/banners/:id", requireAdmin, async (req, res): Promise<void> => {
   const params = UpdateBannerParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -51,7 +52,7 @@ router.patch("/banners/:id", async (req, res): Promise<void> => {
   res.json(UpdateBannerResponse.parse(banner));
 });
 
-router.delete("/banners/:id", async (req, res): Promise<void> => {
+router.delete("/banners/:id", requireAdmin, async (req, res): Promise<void> => {
   const params = DeleteBannerParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });

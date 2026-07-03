@@ -254,6 +254,16 @@ export interface Coupon {
   active: boolean;
 }
 
+export interface AdminVerifyPinInput {
+  /** @minLength 1 */
+  pin: string;
+}
+
+export interface AdminVerifyPinResult {
+  valid: boolean;
+  token: string;
+}
+
 export interface CouponValidateInput {
   /** @minLength 1 */
   code: string;

@@ -501,6 +501,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/CouponValidationResult"
 
+  /admin/verify-pin:
+    post:
+      operationId: verifyAdminPin
+      tags: [admin]
+      summary: Verify the store management PIN and issue a short-lived admin token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminVerifyPinInput"
+      responses:
+        "200":
+          description: PIN verification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminVerifyPinResult"
+        "401":
+          description: Incorrect PIN
+
   /banners:
     get:
       operationId: listBanners
@@ -876,6 +897,19 @@ components:
           enum: [percent, flat]
         value: { type: number }
         active: { type: boolean }
+
+    AdminVerifyPinInput:
+      type: object
+      required: [pin]
+      properties:
+        pin: { type: string, minLength: 1 }
+
+    AdminVerifyPinResult:
+      type: object
+      required: [valid, token]
+      properties:
+        valid: { type: boolean }
+        token: { type: string }
 
     CouponValidateInput:
       type: object

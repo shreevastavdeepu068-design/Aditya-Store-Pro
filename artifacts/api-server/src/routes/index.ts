@@ -9,10 +9,12 @@ import ordersRouter from "./orders";
 import couponsRouter from "./coupons";
 import bannersRouter from "./banners";
 import analyticsRouter from "./analytics";
+import adminRouter from "./admin";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(adminRouter);
 router.use(categoriesRouter);
 router.use(productsRouter);
 router.use(reviewsRouter);

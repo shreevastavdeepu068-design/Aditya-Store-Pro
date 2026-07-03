@@ -586,6 +586,22 @@ export const ValidateCouponResponse = zod.object({
 
 
 /**
+ * @summary Verify the store management PIN and issue a short-lived admin token
+ */
+
+
+
+export const VerifyAdminPinBody = zod.object({
+  "pin": zod.string().min(1)
+})
+
+export const VerifyAdminPinResponse = zod.object({
+  "valid": zod.boolean(),
+  "token": zod.string()
+})
+
+
+/**
  * @summary List banners
  */
 export const ListBannersResponseItem = zod.object({

@@ -1,0 +1,1 @@
+- [Admin PIN auth pattern](admin-pin-auth.md) — hashed PIN + HMAC token via crypto (no bcrypt/jwt dep), gated with setAuthTokenGetter on the client.

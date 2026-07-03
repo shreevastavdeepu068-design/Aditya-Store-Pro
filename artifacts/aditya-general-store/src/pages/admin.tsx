@@ -19,8 +19,11 @@ import {
   useCreateProduct,
   useUpdateProduct,
   useDeleteProduct,
+  useVerifyAdminPin,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { getAdminToken, setAdminToken, clearAdminToken } from "@/lib/admin-auth";
+import { LogOut } from "lucide-react";
 
 type Tab = "overview" | "products" | "categories" | "banners" | "lowstock";
 
@@ -41,9 +44,11 @@ function downloadCsv(filename: string, rows: (string | number)[][]) {
 
 export default function Admin() {
   const [pin, setPin] = useState("");
-  const [unlocked, setUnlocked] = useState(false);
+  const [unlocked, setUnlocked] = useState(() => Boolean(getAdminToken()));
+  const [pinError, setPinError] = useState("");
   const [tab, setTab] = useState<Tab>("overview");
   const queryClient = useQueryClient();
+  const verifyPin = useVerifyAdminPin();
 
   const { data: analytics } = useGetAnalyticsSummary({
     query: { enabled: unlocked, queryKey: getGetAnalyticsSummaryQueryKey() },
@@ -90,11 +95,29 @@ export default function Admin() {
 
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pin === "9675") {
-      setUnlocked(true);
-    } else {
-      alert("Incorrect PIN");
-    }
+    setPinError("");
+    verifyPin.mutate(
+      { data: { pin } },
+      {
+        onSuccess: (result) => {
+          if (result.valid && result.token) {
+            setAdminToken(result.token);
+            setUnlocked(true);
+          } else {
+            setPinError("Incorrect PIN");
+          }
+        },
+        onError: () => {
+          setPinError("Incorrect PIN");
+        },
+      },
+    );
+  };
+
+  const handleLogout = () => {
+    clearAdminToken();
+    setUnlocked(false);
+    setPin("");
   };
 
   if (!unlocked) {
@@ -102,7 +125,7 @@ export default function Admin() {
       <PageLayout hideNav>
         <div className="flex flex-col items-center justify-center min-h-[80vh] p-4">
           <div className="bg-card p-6 rounded-2xl shadow-lg border border-border w-full max-w-sm text-center">
-            <h1 className="text-2xl font-bold mb-2">Admin Area</h1>
+            <h1 className="text-2xl font-bold mb-2">Store Management</h1>
             <p className="text-sm text-muted-foreground mb-6">Enter PIN to access store management</p>
             <form onSubmit={handleUnlock} className="space-y-4">
               <input
@@ -113,8 +136,13 @@ export default function Admin() {
                 className="w-full text-center text-2xl tracking-widest p-4 rounded-xl border-2 border-border focus:border-primary outline-none"
                 maxLength={4}
               />
-              <button type="submit" className="w-full bg-secondary text-white py-3 rounded-xl font-bold hover:bg-secondary/90 transition-colors">
-                Unlock
+              {pinError && <p className="text-sm text-destructive font-medium">{pinError}</p>}
+              <button
+                type="submit"
+                disabled={verifyPin.isPending}
+                className="w-full bg-secondary text-white py-3 rounded-xl font-bold hover:bg-secondary/90 transition-colors disabled:opacity-60"
+              >
+                {verifyPin.isPending ? "Verifying..." : "Unlock"}
               </button>
             </form>
           </div>
@@ -134,7 +162,15 @@ export default function Admin() {
   return (
     <PageLayout hideNav>
       <div className="p-4 pb-24">
-        <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-destructive transition-colors px-3 py-1.5 rounded-lg border border-border"
+          >
+            <LogOut size={14} /> Logout
+          </button>
+        </div>
 
         <div className="flex gap-2 overflow-x-auto mb-6 -mx-4 px-4 pb-1">
           {tabs.map((t) => (

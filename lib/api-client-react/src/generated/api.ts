@@ -22,6 +22,8 @@ import type {
 import type {
   Address,
   AddressInput,
+  AdminVerifyPinInput,
+  AdminVerifyPinResult,
   AnalyticsSummary,
   Banner,
   BannerInput,
@@ -1837,6 +1839,76 @@ export const useValidateCoupon = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getValidateCouponMutationOptions(options));
+    }
+
+export const getVerifyAdminPinUrl = () => {
+
+
+
+
+  return `/api/admin/verify-pin`
+}
+
+/**
+ * @summary Verify the store management PIN and issue a short-lived admin token
+ */
+export const verifyAdminPin = async (adminVerifyPinInput: AdminVerifyPinInput, options?: RequestInit): Promise<AdminVerifyPinResult> => {
+
+  return customFetch<AdminVerifyPinResult>(getVerifyAdminPinUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(adminVerifyPinInput)
+  }
+);}
+
+
+
+
+export const getVerifyAdminPinMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyAdminPin>>, TError,{data: BodyType<AdminVerifyPinInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof verifyAdminPin>>, TError,{data: BodyType<AdminVerifyPinInput>}, TContext> => {
+
+const mutationKey = ['verifyAdminPin'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof verifyAdminPin>>, {data: BodyType<AdminVerifyPinInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  verifyAdminPin(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type VerifyAdminPinMutationResult = NonNullable<Awaited<ReturnType<typeof verifyAdminPin>>>
+    export type VerifyAdminPinMutationBody = BodyType<AdminVerifyPinInput>
+    export type VerifyAdminPinMutationError = ErrorType<void>
+
+    /**
+ * @summary Verify the store management PIN and issue a short-lived admin token
+ */
+export const useVerifyAdminPin = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyAdminPin>>, TError,{data: BodyType<AdminVerifyPinInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof verifyAdminPin>>,
+        TError,
+        {data: BodyType<AdminVerifyPinInput>},
+        TContext
+      > => {
+      return useMutation(getVerifyAdminPinMutationOptions(options));
     }
 
 export const getListBannersUrl = () => {

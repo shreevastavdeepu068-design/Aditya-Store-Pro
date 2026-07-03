@@ -8,6 +8,8 @@
 
 export * from './address';
 export * from './addressInput';
+export * from './adminVerifyPinInput';
+export * from './adminVerifyPinResult';
 export * from './analyticsSummary';
 export * from './banner';
 export * from './bannerInput';

@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { Home, Grid, ShoppingCart, User } from "lucide-react";
+import { Home, Grid, ShoppingCart, User, MoreVertical, Settings } from "lucide-react";
 
 export function BottomNav() {
   const [location] = useLocation();
@@ -36,18 +36,53 @@ export function BottomNav() {
   );
 }
 
+function KebabMenu() {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="absolute top-3 right-3" ref={menuRef}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-label="More options"
+        className="w-8 h-8 flex items-center justify-center rounded-full text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted transition-colors"
+      >
+        <MoreVertical size={16} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 bg-white border border-border rounded-xl shadow-lg overflow-hidden z-50 min-w-[160px]">
+          <Link href="/admin">
+            <div
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-4 py-3 text-xs font-medium text-foreground hover:bg-muted cursor-pointer whitespace-nowrap"
+            >
+              <Settings size={14} /> Store Management
+            </div>
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Footer() {
   return (
-    <footer className="bg-white border-t border-border mt-12 py-8 px-4 text-center pb-24">
+    <footer className="relative bg-white border-t border-border mt-12 py-8 px-4 text-center pb-24">
+      <KebabMenu />
       <div className="max-w-md mx-auto">
         <p className="text-sm font-semibold text-foreground">Aditya General Store</p>
         <p className="text-xs text-muted-foreground mt-1">Tajpur Road, Sidhpura, Kasganj</p>
         <p className="text-xs text-muted-foreground mt-4">© 2026 Aditya General Store. All Rights Reserved.</p>
-        <div className="mt-4 flex justify-center">
-          <Link href="/admin">
-            <span className="text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors cursor-pointer">Admin Login</span>
-          </Link>
-        </div>
       </div>
     </footer>
   );
